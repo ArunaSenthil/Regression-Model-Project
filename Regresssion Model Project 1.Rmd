@@ -1,0 +1,65 @@
+---
+title: "Regression Model Project"
+author: "Aruna"
+date: "5/31/2020"
+output: pdf_document
+---
+## Overview 
+In the project we will work on Motor Trend, a magazine about the automobile industry. Looking at a data set of a collection of cars, and exploring the relationship between a set of variables and miles per gallon (MPG) (outcome). We are particularly interested in the following two questions:
+
+1. Is an automatic or manual transmission better for MPG
+2. Quantify the MPG difference between automatic and manual transmissions
+
+Using simple linear regression analysis, we determine that there is a signficant difference between the mean MPG for automatic and manual transmission cars. 
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+data(mtcars)
+mtcars$vs <- factor(mtcars$vs)
+mtcars$am.label <- factor(mtcars$am, labels=c("Automatic","Manual")) # 0=automatic, 1=manual
+mtcars$gear <- factor(mtcars$gear)
+mtcars$carb <- factor(mtcars$carb)
+head(mtcars)
+boxplot(mpg ~ am.label, data = mtcars, col = (c("red","blue")), ylab = "Miles Per Gallon", xlab = "Transmission Type")
+```
+We can that Manual Transmission provides better MPG
+
+## Regression Analysis
+Now calculate mean MPG values for cars with Automatic and Manual transmission
+```{r}
+aggregate(mtcars$mpg,by=list(mtcars$am.label),FUN=mean)
+```
+We can see again that Manual transmission yields on average 7 MPG more than Automatic
+
+### Simple Linear Regression Test
+```{r}
+T_simple <- lm(mpg ~ factor(am), data=mtcars)
+summary(T_simple)
+```
+The p-value is less than 0.003, so we will not reject the hypothesis. 
+
+Let’s perform an ANOVA
+
+```{r}
+T_variance_analysis <- aov(mpg ~ ., data = mtcars)
+summary(T_variance_analysis)
+```
+
+From the above Analysis of Variance, we can look for p-values of less than .5. This gives us cyl, disp, and wt to consider in addition to transmission type (am)
+```{r}
+T_multivar <- lm(mpg ~ cyl + disp + wt + am, data = mtcars)
+summary(T_multivar)
+```
+
+This Multivariable Regression test now gives us an R-squared value of over .83, suggesting that 83% or more of variance can be explained by the multivariable model. P-values for cyl (number of cylinders) and weight are below 0.5, suggesting that these are confounding variables in the relation between car Transmission Type and Miles per Gallon.
+
+## Residual Plot and Analysis
+```{r}
+par(mfrow = c(2, 2))
+plot(T_multivar)
+```
+
+The “Residuals vs Fitted” plot here shows us that the residuals are homoscedastic. We can also see that they are normally distributed, with the exception of a few outliers.
+
